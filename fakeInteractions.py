@@ -15,14 +15,17 @@ def generate_user(user_id):
         'user_id': user_id,
     }
 
-# Function to generate fake interactions (likes)
-def generate_interactions(users, tweets, num_interactions):
+# Function to generate fake interactions (likes, retweets, and comments)
+def generate_interactions(users, tweets, num_interactions, max_interactions_per_tweet=3):
     interactions = []
 
     for _ in range(num_interactions):
         user_id = random.choice(users['user_id'])
         tweet_id = random.choice(tweets['number'])
-        interactions.append({'user_id': user_id, 'tweet_id': tweet_id})
+        interaction_types = random.sample(['like', 'retweet', 'comment'], random.randint(1, max_interactions_per_tweet))
+
+        for interaction_type in interaction_types:
+            interactions.append({'user_id': user_id, 'tweet_id': tweet_id, 'interaction_type': interaction_type})
 
     return pd.DataFrame(interactions)
 
@@ -34,10 +37,9 @@ def generate_fake_data(users, real_tweets_df, num_interactions):
 
     return users_df, tweets, interactions_df
 
-# Replace this with your actual real dataset
 real_tweets_df = pd.read_csv("data/monkeypox.csv")
 
-# Generate a fake dataset with 100 fake users and 25000 interactions
+# Generate a fake dataset with 100 fake users and 25000 interactions (including likes, retweets, and comments)
 num_fake_users = 100
 num_interactions = 25000
 
@@ -53,4 +55,6 @@ print(real_tweets_df.head())
 print("\nFake Interactions DataFrame:")
 print(fake_interactions_df.head())
 
+# Write the users and interactions DataFrames to CSV files
+fake_users_df.to_csv("data/fake_users.csv", index=False)
 fake_interactions_df.to_csv("data/fake_interactions.csv", index=False)
