@@ -102,3 +102,24 @@ new_data['predictions'] = new_data_predictions
 
 # Save the new dataset with predictions
 new_data[['ï»¿number', 'predictions']].to_csv('data/followup_predictions.csv', index=False)
+
+mean_retweet_count = combo_df['retweet_count'].mean()
+mean_follower_count = combo_df['followers count'].mean()
+total_tweet_count = combo_df.size
+def cred_score(retweets, followers, user_tweet_count):
+    utility = abs(((retweets * followers)/user_tweet_count) - ((mean_retweet_count * mean_follower_count)/total_tweet_count))
+    standardized = np.sqrt((utility ** 2)/(total_tweet_count-1))
+    return 10 - (standardized * 100)
+combo_df['credibility'] = cred_score(combo_df['retweet_count'],
+                                         combo_df['followers count'],
+                                         combo_df['tweet count'])
+#if the score is less than 0, then make it 0 because the score is low enough to not recommend the user in the algorithm
+combo_df.loc[combo_df['credibility'] < 0, "credibility"] = 1.0
+print(combo_df['credibility'])
+print("The maximum social credibility score is: ", combo_df['credibility'].max())
+print("The minimumsocial credibility score is: ", combo_df['credibility'].min())
+print("The mean social credibility score is: ", combo_df['credibility'].mean())
+
+combo_df[['ï»¿number', 'credibility']].to_csv('data/credibility_scores.csv', index=False)
+
+print(combo_df.columns)

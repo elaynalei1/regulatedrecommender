@@ -1,11 +1,11 @@
 import math
 from collections import defaultdict
-from SVM import combo_df
-import csv
+
 
 interactions = []
 
 tweet_text = {}
+
 
 # Read ratings.csv. For each item in ratings, ratings have form: userid, movieid, rating, timestamp.
 
@@ -28,21 +28,6 @@ with open("data/monkeypox.csv", "r") as file:
             li = line.strip().split(",")
             tweet_text[int(li[0])] = li[2]
         k = k + 1
-
-def get_credibility_scores():
-    credibility_dict = {}
-
-    with open("data/credibility_scores.csv", 'r') as csvfile:
-        reader = csv.reader(csvfile)
-        
-        # Assuming the CSV has headers, skip the first row
-        next(reader, None)
-
-        for row in reader:
-            user_id, credibility_score = row
-            credibility_dict[int(user_id)] = float(credibility_score)
-
-    return credibility_dict
 
 #Create dictionary of users and the tweets they have interacted with.
 #Users 
@@ -75,11 +60,11 @@ for interaction in interactions:
     if (tweet not in interactions_dict[user].keys()):
         interactions_dict[user][tweet] = 0           
     if (interaction_type == "like"):
-        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 10
+        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 1
     if (interaction_type == "comment"):
-        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 15
+        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 2
     if (interaction_type == "retweet"):
-        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 10
+        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 3
 
 
 # userset = set()
@@ -113,7 +98,7 @@ def ratingdistance(user1, user2, threshold):
         if (len(combined[tweet]) > 1):
             combinedlist.append(combined[tweet])
     if (len(combinedlist) > threshold - 1):
-       return angulardistance(combinedlist)
+        return angulardistance(combinedlist)
     else:
         return 1.0
 
@@ -131,31 +116,28 @@ def knearestneighbor(u, S, threshold, k):
         ret.append(neighbors[i][0])
     return(ret)
 
-def recommender(u, nrecs, k, misinfo_filter):
+def recommender(u, nrecs, k, credibility_scores):
     interactions_copy = interactions_dict.copy()
     neighbors = knearestneighbor(u, userset, 3, k)
-    movies = defaultdict(list)
-    credibility_scores = get_credibility_scores()
+    tweets = defaultdict(list)
     for tweet in interactions_copy[u].keys():
-        movies[tweet] = ["PASS"]
+        tweets[tweet] = ["PASS"]
     for neighbor in neighbors:
         credibility_score = credibility_scores.get(neighbor, 1.0)  # Default to 1.0 if credibility score is not available
         for tweet in interactions_copy[neighbor].keys():
-            if tweet in movies.keys():
-                if movies[tweet] != ["PASS"]:
-                    movies[tweet][0] += credibility_score  # Adjust the interaction count
-                    movies[tweet][1] += credibility_score * interactions_copy[neighbor][tweet]  # Adjust the interaction score
+            if tweet in tweets.keys():
+                if tweets[tweet] != ["PASS"]:
+                    tweets[tweet][0] += credibility_score  # Adjust the interaction count
+                    tweets[tweet][1] += credibility_score * interactions_copy[neighbor][tweet]  # Adjust the interaction score
             else:
-                movies[tweet] = [credibility_score, credibility_score * interactions_copy[neighbor][tweet]]
+                tweets[tweet] = [credibility_score, credibility_score * interactions_copy[neighbor][tweet]]
     smoothedprediction = []
-    for tweet, data in movies.items():
+
+    for tweet, data in tweets.items():
         if data != ["PASS"]:
             credibility_adjusted_count = data[0]
             credibility_adjusted_score = data[1] / data[0]  # Adjusted average based on credibility
             prediction = (1 + (credibility_adjusted_count * credibility_adjusted_score)) / (1 + credibility_adjusted_count)
-#         if (data != ["PASS"]):
-#             average = data[1]/data[0]
-#             prediction = (10 + (data[0]*average))/(1 + data[0])
             smoothedprediction.append([tweet_text[tweet], prediction])
     smoothedprediction.sort(key=lambda x: x[1], reverse=True)
     return smoothedprediction[0:nrecs]
@@ -166,7 +148,7 @@ def main():
     # print(ratingdistance(200, 500, 3))
     # print(knearestneighbor(2, (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110), 3, 5))
     # print(recommender(1, 5, 30))
-    recommendations = recommender(1, 10, 30, "yes")
+    recommendations = recommender(1, 10, 30)
     for line in recommendations:
         print(line)
 
