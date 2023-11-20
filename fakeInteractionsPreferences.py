@@ -16,7 +16,6 @@ def generate_user(user_id, misinformation_preference):
         'misinformation_preference': misinformation_preference,
     }
 
-# Function to generate fake interactions with specified misinformation preferences
 def generate_interactions(users, tweets, num_interactions, misinformation_preference):
     interactions = []
 
@@ -30,6 +29,10 @@ def generate_interactions(users, tweets, num_interactions, misinformation_prefer
         filtered_tweets = tweets[tweets['binary_class'] == 0]
     else:
         filtered_tweets = tweets  # No specific preference, use all tweets
+
+    # Print the first few rows of the DataFrame to check its structure
+    print("Filtered Tweets DataFrame:")
+    print(filtered_tweets.head())
 
     for _ in range(num_interactions):
         user_id = random.choice(users)['user_id']
@@ -47,7 +50,6 @@ def generate_interactions(users, tweets, num_interactions, misinformation_prefer
 
     return pd.DataFrame(interactions)
 
-# Function to generate a fake dataset with specified misinformation preferences
 def generate_fake_data(num_users, real_tweets_df, num_interactions_per_user):
     users = []
     interactions = []
@@ -55,14 +57,14 @@ def generate_fake_data(num_users, real_tweets_df, num_interactions_per_user):
     for user_id in range(1, num_users + 1):
         if user_id <= 25:
             misinformation_preference = 'misinformation'
-        elif user_id <= 50:
+        elif user_id <= 75:
             misinformation_preference = 'non-misinformation'
         else:
-            misinformation_preference = None  # No specific preference for the last 50 users
+            misinformation_preference = random.choice(['misinformation', 'non-misinformation'])
 
         users.append(generate_user(user_id, misinformation_preference))
         
-        user_interactions = generate_interactions(users, real_tweets_df, num_interactions_per_user, misinformation_preference)
+        user_interactions = generate_interactions(users[-1:], real_tweets_df, num_interactions_per_user, misinformation_preference)
         interactions.append(user_interactions)
 
     users_df = pd.DataFrame(users)
@@ -72,7 +74,6 @@ def generate_fake_data(num_users, real_tweets_df, num_interactions_per_user):
 
 # Replace this with your actual real dataset
 real_tweets_df = pd.read_csv("data/monkeypox-followup.csv")
-print(real_tweets_df.columns)
 
 # Generate a fake dataset with 100 users and 5 interactions per user
 num_users = 100
