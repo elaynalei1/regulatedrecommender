@@ -57,3 +57,7 @@ print(f'Accuracy: {accuracy:.2f}')
 print(f'Precision: {precision:.2f}')
 print(f'Recall: {recall:.2f}')
 print(f'F1 Score: {f1_score:.2f}')
+
+new_data[['ï»¿number', 'credibility']].to_csv('data/credibility_scores.csv', index=False)
+
+print(new_data.columns)
