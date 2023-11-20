@@ -75,11 +75,11 @@ for interaction in interactions:
     if (tweet not in interactions_dict[user].keys()):
         interactions_dict[user][tweet] = 0           
     if (interaction_type == "like"):
-        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 1
+        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 10
     if (interaction_type == "comment"):
-        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 2
+        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 15
     if (interaction_type == "retweet"):
-        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 3
+        interactions_dict[user][tweet] = interactions_dict[user][tweet] + 10
 
 
 # userset = set()
@@ -153,6 +153,9 @@ def recommender(u, nrecs, k, misinfo_filter):
             credibility_adjusted_count = data[0]
             credibility_adjusted_score = data[1] / data[0]  # Adjusted average based on credibility
             prediction = (1 + (credibility_adjusted_count * credibility_adjusted_score)) / (1 + credibility_adjusted_count)
+#         if (data != ["PASS"]):
+#             average = data[1]/data[0]
+#             prediction = (10 + (data[0]*average))/(1 + data[0])
             smoothedprediction.append([tweet_text[tweet], prediction])
     smoothedprediction.sort(key=lambda x: x[1], reverse=True)
     return smoothedprediction[0:nrecs]
