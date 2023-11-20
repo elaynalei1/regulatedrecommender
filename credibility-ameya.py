@@ -1,10 +1,11 @@
 import math
 from collections import defaultdict
-from dt
+
 
 interactions = []
 
 tweet_text = {}
+
 
 # Read ratings.csv. For each item in ratings, ratings have form: userid, movieid, rating, timestamp.
 
@@ -27,21 +28,6 @@ with open("data/monkeypox.csv", "r") as file:
             li = line.strip().split(",")
             tweet_text[int(li[0])] = li[2]
         k = k + 1
-
-
-def credibility():
-    mean_retweet_count = combo_df['retweet_count'].mean()
-    mean_follower_count = combo_df['followers count'].mean()
-    total_tweet_count = combo_df.size
-    def cred_score(retweets, followers, user_tweet_count):
-        utility = abs(((retweets * followers)/user_tweet_count) - ((mean_retweet_count * mean_follower_count)/total_tweet_count))
-        standardized = np.sqrt((utility ** 2)/(total_tweet_count-1))
-        return 10 - (standardized * 100)
-    combo_df['credibility'] = cred_score(combo_df['retweet_count'],
-                                            combo_df['followers count'],
-                                            combo_df['tweet count'])
-    #if the score is less than 0, then make it 0 because the score is low enough to not recommend the user in the algorithm
-    combo_df.loc[combo_df['credibility'] < 0, "credibility"] = 0
 
 #Create dictionary of users and the tweets they have interacted with.
 #Users 
@@ -130,25 +116,28 @@ def knearestneighbor(u, S, threshold, k):
         ret.append(neighbors[i][0])
     return(ret)
 
-def recommender(u, nrecs, k):
+def recommender(u, nrecs, k, credibility_scores):
     interactions_copy = interactions_dict.copy()
     neighbors = knearestneighbor(u, userset, 3, k)
-    movies = defaultdict(list)
+    tweets = defaultdict(list)
     for tweet in interactions_copy[u].keys():
-        movies[tweet] = ["PASS"]
+        tweets[tweet] = ["PASS"]
     for neighbor in neighbors:
+        credibility_score = credibility_scores.get(neighbor, 1.0)  # Default to 1.0 if credibility score is not available
         for tweet in interactions_copy[neighbor].keys():
-            if (tweet in movies.keys()):
-                if (movies[tweet] != ["PASS"]):
-                    movies[tweet][0] += 1
-                    movies[tweet][1] = (movies[tweet][1] + interactions_copy[neighbor][tweet])
+            if tweet in tweets.keys():
+                if tweets[tweet] != ["PASS"]:
+                    tweets[tweet][0] += credibility_score  # Adjust the interaction count
+                    tweets[tweet][1] += credibility_score * interactions_copy[neighbor][tweet]  # Adjust the interaction score
             else:
-                movies[tweet] = [1, interactions_copy[neighbor][tweet]]
+                tweets[tweet] = [credibility_score, credibility_score * interactions_copy[neighbor][tweet]]
     smoothedprediction = []
-    for tweet, data in movies.items():
-        if (data != ["PASS"]):
-            average = data[1]/data[0]
-            prediction = (1 + (data[0]*average))/(1 + data[0])
+
+    for tweet, data in tweets.items():
+        if data != ["PASS"]:
+            credibility_adjusted_count = data[0]
+            credibility_adjusted_score = data[1] / data[0]  # Adjusted average based on credibility
+            prediction = (1 + (credibility_adjusted_count * credibility_adjusted_score)) / (1 + credibility_adjusted_count)
             smoothedprediction.append([tweet_text[tweet], prediction])
     smoothedprediction.sort(key=lambda x: x[1], reverse=True)
     return smoothedprediction[0:nrecs]
