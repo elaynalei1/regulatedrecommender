@@ -37,7 +37,7 @@ def generate_fake_data(users, real_tweets_df, num_interactions):
 
     return users_df, tweets, interactions_df
 
-real_tweets_df = pd.read_csv("data/monkeypox.csv")
+real_tweets_df = pd.read_csv("data/monkeypox-followup.csv")
 
 # Generate a fake dataset with 100 fake users and 25000 interactions (including likes, retweets, and comments)
 num_fake_users = 100
