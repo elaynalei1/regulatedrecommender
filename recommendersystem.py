@@ -98,7 +98,7 @@ def ratingdistance(user1, user2, threshold):
         if (len(combined[tweet]) > 1):
             combinedlist.append(combined[tweet])
     if (len(combinedlist) > threshold - 1):
-        return angulardistance(combinedlist)
+       return angulardistance(combinedlist)
     else:
         return 1.0
 
@@ -116,7 +116,7 @@ def knearestneighbor(u, S, threshold, k):
         ret.append(neighbors[i][0])
     return(ret)
 
-def recommender(u, nrecs, k):
+def recommender(u, nrecs, k, misinfo_filter):
     interactions_copy = interactions_dict.copy()
     neighbors = knearestneighbor(u, userset, 3, k)
     movies = defaultdict(list)
@@ -145,7 +145,7 @@ def main():
     # print(ratingdistance(200, 500, 3))
     # print(knearestneighbor(2, (100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110), 3, 5))
     # print(recommender(1, 5, 30))
-    recommendations = recommender(1, 10, 30)
+    recommendations = recommender(1, 10, 30, yes)
     for line in recommendations:
         print(line)
 
